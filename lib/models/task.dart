@@ -22,4 +22,6 @@ class Task {
       'isCompleted': isCompleted ? 1 : 0,
     };
   }
+
+  copyWith({required bool isCompleted}) {}
 }
