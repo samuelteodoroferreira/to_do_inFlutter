@@ -1,0 +1,35 @@
+name: myapp
+description: "A new Flutter project."
+
+# Evita a publicação acidental do pacote no pub.dev.
+publish_to: 'none'
+
+# Versão do app (major.minor.patch+build_number)
+version: 1.0.0+1
+
+# Definição de ambiente
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+# Dependências principais do projeto
+dependencies:
+  flutter:
+    sdk: flutter
+  sqflite: ^2.0.3 # Banco de dados SQLite
+  path: ^1.8.3 # Manipulação de caminhos
+  path_provider: ^2.0.11 # Localização de diretórios no dispositivo
+  cupertino_icons: ^1.0.8 # Ícones estilo iOS
+
+# Dependências de desenvolvimento e ferramentas auxiliares
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0 # Regras recomendadas para boas práticas
+  mockito: ^5.4.1 # Biblioteca para criação de mocks
+
+# Configurações específicas do Flutter
+flutter:
+  uses-material-design: true
+  # Adicione recursos como imagens ou fontes, se necessário:
+  # assets:
+  #   - images/example.png
