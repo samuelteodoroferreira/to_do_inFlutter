@@ -1,67 +1,82 @@
 import 'package:flutter/material.dart';
-import '../controllers/task_controller.dart';
-import '../models/task.dart';
-import 'widgets/task_list_tile.dart';
-import 'widgets/task_input_dialog.dart';
+import '../models/tarefa.dart';
+import 'widgets/item_lista_tarefa.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class PaginaInicial extends StatefulWidget {
+  const PaginaInicial({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
-  _HomePageState createState() => _HomePageState();
+  State<PaginaInicial> createState() => _PaginaInicialState();
 }
 
-class _HomePageState extends State<HomePage> {
-  final TaskController _controller = TaskController();
-  List<Task> _tasks = [];
+class _PaginaInicialState extends State<PaginaInicial> {
+  final List<Tarefa> _tarefas = [];
+  final TextEditingController _taskController = TextEditingController();
 
-  @override
-  void initState() {
-    super.initState();
-    _loadTasks();
+  void _adicionarTarefa(String titulo) {
+    setState(() {
+      _tarefas.add(Tarefa(titulo: titulo));
+    });
+    _taskController.clear();
   }
 
-  Future<void> _loadTasks() async {
-    final tasks = await _controller.fetchTasks();
+  void _alternarConclusao(Tarefa tarefa) {
     setState(() {
-      _tasks = tasks;
+      tarefa.estaConcluida = !tarefa.estaConcluida;
     });
   }
 
-  void _addTask(String title) async {
-    await _controller.addTask(title);
-    _loadTasks();
-  }
-
-  void _toggleTaskCompletion(Task task) async {
-    await _controller.updateTaskStatus(task, !task.isCompleted);
-    _loadTasks();
-  }
-
-  void _deleteTask(int id) async {
-    await _controller.deleteTask(id);
-    _loadTasks();
+  void _deletarTarefa(Tarefa tarefa) {
+    setState(() {
+      _tarefas.remove(tarefa);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Administrador de Tarefas do Dia')),
+      appBar: AppBar(
+        title: const Text('Gerenciador de Tarefas'),
+      ),
       body: Column(
         children: [
-          TaskInputDialog(onSubmit: _addTask),
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    key: Key('task_input'),
+                    controller: _taskController,
+                    decoration: const InputDecoration(
+                      labelText: 'Adicionar Tarefa',
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: () {
+                    if (_taskController.text.isNotEmpty) {
+                      _adicionarTarefa(_taskController.text);
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
           Expanded(
-            child: ListView.builder(
-              itemCount: _tasks.length,
-              itemBuilder: (context, index) {
-                final task = _tasks[index];
-                return TaskListTile(
-                  task: task,
-                  onToggleCompletion: _toggleTaskCompletion,
-                  onDelete: _deleteTask,
-                );
-              },
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: ListView.builder(
+                itemCount: _tarefas.length,
+                itemBuilder: (context, index) {
+                  return ItemListaTarefa(
+                    tarefa: _tarefas[index],
+                    aoAlternarConclusao: _alternarConclusao,
+                    aoDeletar: _deletarTarefa,
+                  );
+                },
+              ),
             ),
           ),
         ],

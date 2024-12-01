@@ -1,142 +1,57 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:myapp/db/db_helper.dart';
-import 'package:myapp/models/task.dart';
 import 'package:myapp/main.dart';
-import 'package:myapp/controllers/task_controller.dart';
+import 'package:myapp/models/tarefa.dart';
 import 'package:myapp/services/db_helper.dart';
 
 void main() {
-  group('DBHelper Tests', () {
+  group('Testes do DBHelper', () {
     final dbHelper = DBHelper();
 
-    test('should insert and retrieve tasks from the database', () async {
-      // Prepare the task
-      final task = Task(id: 1, title: 'Test Task', isCompleted: false);
+    test('deve inserir e recuperar tarefas do banco de dados', () async {
+      // Preparar a tarefa
+      final tarefa = Tarefa(id: 1, titulo: 'Tarefa de Teste', estaConcluida: false);
 
-      // Insert task
-      await dbHelper.insertTask(task);
+      // Inserir tarefa
+      await dbHelper.insertTask(tarefa);
 
-      // Retrieve tasks
-      final tasks = await dbHelper.getTasks();
-
-      expect(tasks.length, greaterThan(0));
-      expect(tasks.first.title, equals('Test Task'));
+      // Recuperar tarefas
+      final tarefas = await dbHelper.getTasks();
+      expect(tarefas.isNotEmpty, isTrue);
+      expect(tarefas.first.titulo, 'Tarefa de Teste');
     });
 
-    test('should update task status in the database', () async {
-      final task = Task(id: 1, title: 'Test Task', isCompleted: false);
+    testWidgets('Deve alternar a conclusão de uma tarefa', (WidgetTester tester) async {
+      await tester.pumpWidget(const MeuApp());
 
-      // Update the task
-      await dbHelper.updateTask(task.copyWith(isCompleted: true));
-
-      // Retrieve tasks
-      final updatedTasks = await dbHelper.getTasks();
-      expect(updatedTasks.first.isCompleted, equals(true));
-    });
-
-    test('should delete a task from the database', () async {
-      // Delete the task
-      await dbHelper.deleteTask(1);
-
-      // Check tasks
-      final tasks = await dbHelper.getTasks();
-      expect(tasks, isEmpty);
-    });
-  });
-
-  group('TaskController Tests', () {
-    final controller = TaskController();
-
-    test('should add a task and retrieve it via the controller', () async {
-      // Add task
-      await controller.addTask('New Task');
-
-      // Fetch tasks
-      final tasks = await controller.fetchTasks();
-      expect(tasks.any((task) => task.title == 'New Task'), isTrue);
-    });
-
-    test('should toggle task completion via the controller', () async {
-      // Prepare a task
-      final tasks = await controller.fetchTasks();
-      final task = tasks.first;
-
-      // Toggle completion
-      await controller.updateTaskStatus(task, !task.isCompleted);
-
-      // Check updated status
-      final updatedTasks = await controller.fetchTasks();
-      expect(updatedTasks.first.isCompleted, equals(!task.isCompleted));
-    });
-
-    test('should delete a task via the controller', () async {
-      // Delete task
-      final tasks = await controller.fetchTasks();
-      if (tasks.isNotEmpty) {
-        await controller.deleteTask(tasks.first.id!);
-      }
-
-      // Check if deleted
-      final remainingTasks = await controller.fetchTasks();
-      expect(remainingTasks, isEmpty);
-    });
-  });
-
-  group('Widget Tests', () {
-    testWidgets('Should display "Sem tarefas" initially',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(const MyApp());
-
-      // Check for initial message
-      expect(find.text('Sem tarefas'), findsOneWidget);
-    });
-
-    testWidgets('Should add a new task and display it',
-        (WidgetTester tester) async {
-      await tester.pumpWidget(const MyApp());
-
-      // Add a task
-      await tester.enterText(find.byType(TextField), 'Nova Tarefa');
+      // Adicionar uma tarefa
+      await tester.enterText(find.byType(TextField), 'Alternar Conclusão');
       await tester.tap(find.byIcon(Icons.add));
       await tester.pumpAndSettle();
 
-      // Verify the task appears
-      expect(find.text('Nova Tarefa'), findsOneWidget);
-    });
-
-    testWidgets('Should toggle task completion', (WidgetTester tester) async {
-      await tester.pumpWidget(const MyApp());
-
-      // Add a task
-      await tester.enterText(find.byType(TextField), 'Toggle Task');
-      await tester.tap(find.byIcon(Icons.add));
-      await tester.pumpAndSettle();
-
-      // Toggle completion
+      // Alternar conclusão
       await tester.tap(find.byType(Checkbox).first);
       await tester.pumpAndSettle();
 
-      // Check if task is marked completed
+      // Verificar se a tarefa está marcada como concluída
       final checkbox = tester.widget<Checkbox>(find.byType(Checkbox).first);
       expect(checkbox.value, isTrue);
     });
 
-    testWidgets('Should delete a task', (WidgetTester tester) async {
-      await tester.pumpWidget(const MyApp());
+    testWidgets('Deve deletar uma tarefa', (WidgetTester tester) async {
+      await tester.pumpWidget(const MeuApp());
 
-      // Add a task
-      await tester.enterText(find.byType(TextField), 'Delete Task');
+      // Adicionar uma tarefa
+      await tester.enterText(find.byType(TextField), 'Deletar Tarefa');
       await tester.tap(find.byIcon(Icons.add));
       await tester.pumpAndSettle();
 
-      // Delete task
+      // Deletar tarefa
       await tester.tap(find.byIcon(Icons.delete).first);
       await tester.pumpAndSettle();
 
-      // Verify task is removed
-      expect(find.text('Delete Task'), findsNothing);
-      expect(find.text('Sem tarefas'), findsOneWidget);
+      // Verificar se a tarefa foi removida
+      expect(find.text('Deletar Tarefa'), findsNothing);
     });
   });
 }

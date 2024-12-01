@@ -1,5 +1,5 @@
 import 'package:sqflite/sqflite.dart';
-import '../models/task.dart';
+import '../models/tarefa.dart';
 import 'package:path/path.dart';
 
 class DBHelper {
@@ -22,25 +22,45 @@ class DBHelper {
       join(dbPath, 'tasks.db'),
       onCreate: (db, version) {
         return db.execute(
-          'CREATE TABLE tasks(id INTEGER PRIMARY KEY, title TEXT, isCompleted INTEGER)',
+          'CREATE TABLE tasks(id INTEGER PRIMARY KEY, titulo TEXT, estaConcluida INTEGER)',
         );
       },
       version: 1,
     );
   }
 
-  Future<List<Task>> getTasks() async {
+  Future<List<Tarefa>> getTasks() async {
     final db = await database;
     final maps = await db.query('tasks');
-    return maps.map((map) => Task.fromMap(map)).toList();
+    if (maps.isNotEmpty) {
+      return maps.map((map) => Tarefa.fromMap(map)).toList();
+    } else {
+      return [];
+    }
   }
 
-  Future<int> insertTask(Task task) async {
+  Future<List<Tarefa>> getCompletedTasks() async {
+    final db = await database;
+    final List<Map<String, dynamic>> maps = await db.query(
+      'tarefas',
+      where: 'estaConcluida = ?',
+      whereArgs: [1],
+    );
+    return List.generate(maps.length, (i) {
+      return Tarefa(
+        id: maps[i]['id'],
+        titulo: maps[i]['titulo'],
+        estaConcluida: maps[i]['estaConcluida'] == 1,
+      );
+    });
+  }
+
+  Future<int> insertTask(Tarefa task) async {
     final db = await database;
     return db.insert('tasks', task.toMap());
   }
 
-  Future<int> updateTask(Task task) async {
+  Future<int> updateTask(Tarefa task) async {
     final db = await database;
     return db.update(
       'tasks',
