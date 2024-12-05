@@ -1,28 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:myapp/main.dart';
-import 'package:myapp/models/tarefa.dart';
-import 'package:myapp/services/db_helper.dart';
+import 'package:myapp/main.dart' as mainApp;
 
 void main() {
-  group('Testes do DBHelper', () {
-    final dbHelper = DBHelper();
-
-    test('deve inserir e recuperar tarefas do banco de dados', () async {
-      // Preparar a tarefa
-      final tarefa = Tarefa(id: 1, titulo: 'Tarefa de Teste', estaConcluida: false);
-
-      // Inserir tarefa
-      await dbHelper.insertTask(tarefa);
-
-      // Recuperar tarefas
-      final tarefas = await dbHelper.getTasks();
-      expect(tarefas.isNotEmpty, isTrue);
-      expect(tarefas.first.titulo, 'Tarefa de Teste');
-    });
-
+  group('Testes do App', () {
     testWidgets('Deve alternar a conclusão de uma tarefa', (WidgetTester tester) async {
-      await tester.pumpWidget(const MeuApp());
+      await tester.pumpWidget(const mainApp.MeuApp());
 
       // Adicionar uma tarefa
       await tester.enterText(find.byType(TextField), 'Alternar Conclusão');
@@ -39,7 +22,7 @@ void main() {
     });
 
     testWidgets('Deve deletar uma tarefa', (WidgetTester tester) async {
-      await tester.pumpWidget(const MeuApp());
+      await tester.pumpWidget(const mainApp.MeuApp());
 
       // Adicionar uma tarefa
       await tester.enterText(find.byType(TextField), 'Deletar Tarefa');

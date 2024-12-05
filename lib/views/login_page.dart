@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'home_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -15,10 +16,7 @@ class _LoginPageState extends State<LoginPage> {
   void _login() {
     // Adicione a lógica de autenticação aqui
     // Autenticação implementada por Samuel Teodoro
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const PaginaInicial()),
-    );
+    Get.off(() => const PaginaInicial());
   }
 
   @override

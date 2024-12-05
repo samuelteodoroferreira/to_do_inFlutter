@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
-import 'package:myapp/models/tarefa.dart';
-import 'package:myapp/services/db_helper.dart';
+import 'package:get/get.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'views/login_page.dart';
+import 'views/home_page.dart';
+import 'views/completed_tasks_page.dart';
+import 'services/firebase_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(const MeuApp());
 }
 
@@ -11,16 +18,32 @@ class MeuApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return GetMaterialApp(
       title: 'Gerenciador de Tarefas',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: Colors.grey[100],
+        primarySwatch: Colors.teal,
+        scaffoldBackgroundColor: Colors.white,
+        textTheme: const TextTheme(
+          bodyLarge: TextStyle(fontSize: 18.0, fontWeight: FontWeight.bold),
+          bodyMedium: TextStyle(fontSize: 16.0),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            textStyle: const TextStyle(fontSize: 18.0),
+            padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 24.0),
+          ),
+        ),
+        inputDecorationTheme: const InputDecorationTheme(
+          border: OutlineInputBorder(),
+          contentPadding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
+        ),
       ),
       home: const LoginPage(),
-      routes: {
-        '/home': (context) => const HomePage(),
-      },
+      getPages: [
+        GetPage(name: '/', page: () => const LoginPage()),
+        GetPage(name: '/home', page: () => const HomePage()),
+        GetPage(name: '/completed', page: () => const CompletedTasksPage()),
+      ],
     );
   }
 }
@@ -29,48 +52,34 @@ class HomePage extends StatefulWidget {
   const HomePage({super.key});
 
   @override
+  // ignore: library_private_types_in_public_api
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  final DBHelper dbHelper = DBHelper();
+  final FirebaseFirestore firestore = FirebaseFirestore.instance; // Firestore instance
   final TextEditingController _controller = TextEditingController();
-  List<Tarefa> _tarefas = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _loadTasks();
-  }
-
-  Future<void> _loadTasks() async {
-    final tarefas = await dbHelper.getTasks();
-    setState(() {
-      _tarefas = tarefas;
-    });
-  }
+  final FirebaseService firebaseService = FirebaseService();
 
   Future<void> _addTask() async {
     final titulo = _controller.text;
     if (titulo.isNotEmpty) {
-      final tarefa = Tarefa(titulo: titulo, estaConcluida: false);
-      await dbHelper.insertTask(tarefa);
+      await firestore.collection('tarefas').add({
+        'titulo': titulo,
+        'estaConcluida': false,
+      });
       _controller.clear();
-      _loadTasks();
     }
   }
 
-  Future<void> _toggleTaskCompletion(Tarefa tarefa) async {
-    tarefa.estaConcluida = !tarefa.estaConcluida;
-    await dbHelper.updateTask(tarefa);
-    _loadTasks();
+  Future<void> _toggleTaskCompletion(DocumentSnapshot tarefa) async {
+    await firestore.collection('tarefas').doc(tarefa.id).update({
+      'estaConcluida': !tarefa['estaConcluida'],
+    });
   }
 
-  Future<void> _deleteTask(Tarefa tarefa) async {
-    if (tarefa.id != null) {
-      await dbHelper.deleteTask(tarefa.id!);
-    }
-    _loadTasks();
+  Future<void> _deleteTask(DocumentSnapshot tarefa) async {
+    await firestore.collection('tarefas').doc(tarefa.id).delete();
   }
 
   @override
@@ -118,24 +127,38 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           Expanded(
-            child: ListView.builder(
-              itemCount: _tarefas.length,
-              itemBuilder: (context, index) {
-                final tarefa = _tarefas[index];
-                return ListTile(
-                  title: Text(tarefa.titulo),
-                  leading: Checkbox(
-                    value: tarefa.estaConcluida,
-                    onChanged: (value) {
-                      _toggleTaskCompletion(tarefa);
-                    },
-                  ),
-                  trailing: IconButton(
-                    icon: const Icon(Icons.delete),
-                    onPressed: () {
-                      _deleteTask(tarefa);
-                    },
-                  ),
+            child: StreamBuilder<QuerySnapshot>(
+              stream: firestore.collection('tarefas').snapshots(),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return const Center(child: Text('Erro ao carregar tarefas'));
+                }
+
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final tarefas = snapshot.data!.docs;
+                return ListView.builder(
+                  itemCount: tarefas.length,
+                  itemBuilder: (context, index) {
+                    final tarefa = tarefas[index];
+                    return ListTile(
+                      title: Text(tarefa['titulo']),
+                      leading: Checkbox(
+                        value: tarefa['estaConcluida'],
+                        onChanged: (value) {
+                          _toggleTaskCompletion(tarefa);
+                        },
+                      ),
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () {
+                          _deleteTask(tarefa);
+                        },
+                      ),
+                    );
+                  },
                 );
               },
             ),
@@ -155,76 +178,35 @@ class CompletedTasksPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Tarefas Concluídas'),
       ),
-      body: FutureBuilder<List<Tarefa>>(
-        future: DBHelper().getCompletedTasks(),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('tarefas')
+            .where('estaConcluida', isEqualTo: true)
+            .snapshots(),
         builder: (context, snapshot) {
+          if (snapshot.hasError) {
+            return const Center(child: Text('Erro ao carregar tarefas'));
+          }
+
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return const Center(child: Text('Erro ao carregar tarefas'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('Nenhuma tarefa concluída'));
-          } else {
-            final tarefasConcluidas = snapshot.data!;
-            return ListView.builder(
-              itemCount: tarefasConcluidas.length,
-              itemBuilder: (context, index) {
-                final tarefa = tarefasConcluidas[index];
-                return ListTile(
-                  title: Text(tarefa.titulo),
-                );
-              },
-            );
           }
+
+          final tarefasConcluidas = snapshot.data!.docs;
+          if (tarefasConcluidas.isEmpty) {
+            return const Center(child: Text('Nenhuma tarefa concluída'));
+          }
+
+          return ListView.builder(
+            itemCount: tarefasConcluidas.length,
+            itemBuilder: (context, index) {
+              final tarefa = tarefasConcluidas[index];
+              return ListTile(
+                title: Text(tarefa['titulo']),
+              );
+            },
+          );
         },
-      ),
-    );
-  }
-}
-
-class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
-
-  @override
-  _LoginPageState createState() => _LoginPageState();
-}
-
-class _LoginPageState extends State<LoginPage> {
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
-
-  void _login() {
-    // Implement your login logic here
-    Navigator.pushReplacementNamed(context, '/home');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Login'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TextField(
-              controller: _usernameController,
-              decoration: const InputDecoration(labelText: 'Nome de usuário'),
-            ),
-            TextField(
-              controller: _passwordController,
-              decoration: const InputDecoration(labelText: 'Senha'),
-              obscureText: true,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _login,
-              child: const Text('Login'),
-            ),
-          ],
-        ),
       ),
     );
   }

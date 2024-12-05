@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import '../models/tarefa.dart';
-import 'widgets/item_lista_tarefa.dart';
+import 'package:get/get.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'completed_tasks_page.dart';
+import 'login_page.dart';
 
 class PaginaInicial extends StatefulWidget {
   const PaginaInicial({super.key});
@@ -10,26 +12,29 @@ class PaginaInicial extends StatefulWidget {
 }
 
 class _PaginaInicialState extends State<PaginaInicial> {
-  final List<Tarefa> _tarefas = [];
+  final FirebaseFirestore firestore = FirebaseFirestore.instance; // Firestore instance
   final TextEditingController _taskController = TextEditingController();
 
-  void _adicionarTarefa(String titulo) {
-    setState(() {
-      _tarefas.add(Tarefa(titulo: titulo));
-    });
-    _taskController.clear();
+  Future<void> _adicionarTarefa(String titulo) async {
+    if (titulo.isNotEmpty) {
+      await firestore.collection('tarefas').add({
+        'titulo': titulo,
+        'estaConcluida': false,
+        'dataAdicionada': DateTime.now().toIso8601String(),
+      });
+      _taskController.clear();
+    }
   }
 
-  void _alternarConclusao(Tarefa tarefa) {
-    setState(() {
-      tarefa.estaConcluida = !tarefa.estaConcluida;
+  Future<void> _alternarConclusao(DocumentSnapshot tarefa) async {
+    await firestore.collection('tarefas').doc(tarefa.id).update({
+      'estaConcluida': !tarefa['estaConcluida'],
+      'dataConcluida': !tarefa['estaConcluida'] ? DateTime.now().toIso8601String() : null,
     });
   }
 
-  void _deletarTarefa(Tarefa tarefa) {
-    setState(() {
-      _tarefas.remove(tarefa);
-    });
+  Future<void> _deletarTarefa(DocumentSnapshot tarefa) async {
+    await firestore.collection('tarefas').doc(tarefa.id).delete();
   }
 
   @override
@@ -37,6 +42,20 @@ class _PaginaInicialState extends State<PaginaInicial> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Gerenciador de Tarefas'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.check),
+            onPressed: () {
+              Get.to(() => const CompletedTasksPage());
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.exit_to_app),
+            onPressed: () {
+              Get.offAll(() => const LoginPage());
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -56,9 +75,7 @@ class _PaginaInicialState extends State<PaginaInicial> {
                 IconButton(
                   icon: const Icon(Icons.add),
                   onPressed: () {
-                    if (_taskController.text.isNotEmpty) {
-                      _adicionarTarefa(_taskController.text);
-                    }
+                    _adicionarTarefa(_taskController.text);
                   },
                 ),
               ],
@@ -67,13 +84,41 @@ class _PaginaInicialState extends State<PaginaInicial> {
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(8.0),
-              child: ListView.builder(
-                itemCount: _tarefas.length,
-                itemBuilder: (context, index) {
-                  return ItemListaTarefa(
-                    tarefa: _tarefas[index],
-                    aoAlternarConclusao: _alternarConclusao,
-                    aoDeletar: _deletarTarefa,
+              child: StreamBuilder<QuerySnapshot>(
+                stream: firestore.collection('tarefas').snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.hasError) {
+                    return const Center(child: Text('Erro ao carregar tarefas'));
+                  }
+
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+
+                  final tarefas = snapshot.data!.docs;
+                  return ListView.builder(
+                    itemCount: tarefas.length,
+                    itemBuilder: (context, index) {
+                      final tarefa = tarefas[index];
+                      return Card(
+                        color: Colors.white,
+                        child: ListTile(
+                          title: Text(tarefa['titulo']),
+                          leading: Checkbox(
+                            value: tarefa['estaConcluida'],
+                            onChanged: (value) {
+                              _alternarConclusao(tarefa);
+                            },
+                          ),
+                          trailing: IconButton(
+                            icon: const Icon(Icons.delete),
+                            onPressed: () {
+                              _deletarTarefa(tarefa);
+                            },
+                          ),
+                        ),
+                      );
+                    },
                   );
                 },
               ),
