@@ -3,6 +3,8 @@ import 'package:get/get.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'completed_tasks_page.dart';
 import 'login_page.dart';
+import '../services/firebase_service.dart';
+import '../models/tarefa.dart';  // Add this import
 
 class PaginaInicial extends StatefulWidget {
   const PaginaInicial({super.key});
@@ -12,29 +14,47 @@ class PaginaInicial extends StatefulWidget {
 }
 
 class _PaginaInicialState extends State<PaginaInicial> {
-  final FirebaseFirestore firestore = FirebaseFirestore.instance; // Firestore instance
+  final FirebaseService _firebaseService = FirebaseService();
   final TextEditingController _taskController = TextEditingController();
 
   Future<void> _adicionarTarefa(String titulo) async {
     if (titulo.isNotEmpty) {
-      await firestore.collection('tarefas').add({
-        'titulo': titulo,
-        'estaConcluida': false,
-        'dataAdicionada': DateTime.now().toIso8601String(),
-      });
-      _taskController.clear();
+      try {
+        await _firebaseService.addTask(Tarefa(
+          id: '', // Firestore will generate this
+          titulo: titulo,
+          descricao: '',
+          estaConcluida: false,
+          dataCriacao: DateTime.now(),
+        ));
+        _taskController.clear();
+      } catch (e) {
+        debugPrint('Erro ao adicionar tarefa: $e');
+      }
     }
   }
 
   Future<void> _alternarConclusao(DocumentSnapshot tarefa) async {
-    await firestore.collection('tarefas').doc(tarefa.id).update({
-      'estaConcluida': !tarefa['estaConcluida'],
-      'dataConcluida': !tarefa['estaConcluida'] ? DateTime.now().toIso8601String() : null,
-    });
+    try {
+      bool novoEstado = !(tarefa.get('estaConcluida') ?? false);
+      await _firebaseService.updateTask(Tarefa(
+        id: tarefa.id,
+        titulo: tarefa.get('titulo'),
+        descricao: tarefa.get('descricao') ?? '',
+        estaConcluida: novoEstado,
+        dataCriacao: DateTime.parse(tarefa.get('dataCriacao')),
+      ));
+    } catch (e) {
+      debugPrint('Erro ao alternar conclusão: $e');
+    }
   }
 
   Future<void> _deletarTarefa(DocumentSnapshot tarefa) async {
-    await firestore.collection('tarefas').doc(tarefa.id).delete();
+    try {
+      await _firebaseService.deleteTask(tarefa.id);
+    } catch (e) {
+      debugPrint('Erro ao deletar tarefa: $e');
+    }
   }
 
   @override
@@ -85,7 +105,7 @@ class _PaginaInicialState extends State<PaginaInicial> {
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: StreamBuilder<QuerySnapshot>(
-                stream: firestore.collection('tarefas').snapshots(),
+                stream: FirebaseFirestore.instance.collection('tarefas').snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.hasError) {
                     return const Center(child: Text('Erro ao carregar tarefas'));
@@ -103,10 +123,10 @@ class _PaginaInicialState extends State<PaginaInicial> {
                       return Card(
                         color: Colors.white,
                         child: ListTile(
-                          title: Text(tarefa['titulo']),
+                          title: Text(tarefa['titulo'] ?? ''),
                           leading: Checkbox(
-                            value: tarefa['estaConcluida'],
-                            onChanged: (value) {
+                            value: tarefa['estaConcluida'] ?? false,
+                            onChanged: (bool? value) {
                               _alternarConclusao(tarefa);
                             },
                           ),

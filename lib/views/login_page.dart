@@ -14,8 +14,6 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
 
   void _login() {
-    // Adicione a lógica de autenticação aqui
-    // Autenticação implementada por Samuel Teodoro
     Get.off(() => const PaginaInicial());
   }
 

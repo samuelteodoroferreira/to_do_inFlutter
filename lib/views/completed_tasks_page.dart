@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Add Firestore import
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class CompletedTasksPage extends StatelessWidget {
   const CompletedTasksPage({super.key});
