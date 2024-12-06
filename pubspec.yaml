@@ -1,5 +1,5 @@
 name: myapp
-description: "Um APP para Controle de Tarefas do Dia"."
+description: "Um APP para Controle de Tarefas do Dia"
 
 # Evita a publicação acidental do pacote no pub.dev.
 publish_to: 'none'
@@ -15,17 +15,16 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  logger: ^2.5.0
+  retrofit: ^4.0.1
+  dio: ^5.7.0
   path_provider: ^2.0.11 # Localização de diretórios no dispositivo
   cupertino_icons: ^1.0.8 # Ícones estilo iOS
   get: ^4.6.1 # Gerenciamento de estado
-  firebase_core: ^2.24.2 # Configuração do Firebase
-  cloud_firestore: ^4.13.6 # Banco de dados Firestore
-  firebase_auth: ^3.3.3 # Autenticação com Firebase
-  retrofit: ^3.0.1
-  dio: ^5.3.2
+  firebase_core: ^3.8.1 # Configuração do Firebase
+  cloud_firestore: ^5.5.1 # Banco de dados Firestore
+  firebase_auth: ^5.3.4 # Autenticação com Firebase
   json_annotation: ^4.8.1
-  dio: ^4.0.0
-  json_annotation: ^4.0.1
 
 # Dependências de desenvolvimento e ferramentas auxiliares
 dev_dependencies:
@@ -33,7 +32,7 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^5.0.0 # Regras recomendadas para boas práticas
   mockito: ^5.4.1 # Biblioteca para criação de mocks
-  retrofit_generator: ^7.0.8
+  retrofit_generator: ^9.1.5
   build_runner: ^2.4.6
   json_serializable: ^6.7.1
 

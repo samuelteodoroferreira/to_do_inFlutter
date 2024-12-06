@@ -49,3 +49,6 @@ class MeuApp extends StatelessWidget {
     );
   }
 }
+
+class TaskController {
+}
