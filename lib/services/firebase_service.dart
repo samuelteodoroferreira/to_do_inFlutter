@@ -3,10 +3,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'api_client.dart';
 import '../models/tarefa.dart';
 import 'dart:developer' as developer;
+import 'package:logger/logger.dart';
 
 class FirebaseService {
   late final ApiClient _apiClient;
   final CollectionReference tarefasCollection = FirebaseFirestore.instance.collection('tarefas');
+  final logger = Logger();
   
   int _readOperations = 0;
   int _writeOperations = 0;
@@ -94,7 +96,7 @@ class FirebaseService {
   }
 
   void printCounters() {
-    print('Leituras: $_readOperations');
-    print('Escritas: $_writeOperations');
+    logger.i('Leituras: $_readOperations');
+    logger.i('Escritas: $_writeOperations');
   }
 }

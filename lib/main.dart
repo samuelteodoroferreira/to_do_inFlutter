@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'views/login_page.dart';
-import 'views/home_page.dart';
-import 'views/completed_tasks_page.dart';
 import 'controllers/task_controller.dart';
 
 void main() async {
@@ -41,14 +39,6 @@ class MeuApp extends StatelessWidget {
       initialBinding: BindingsBuilder(() {
         Get.put(TaskController());
       }),
-      getPages: [
-        GetPage(name: '/', page: () => const LoginPage()),
-        GetPage(name: '/home', page: () => const PaginaInicial()),
-        GetPage(name: '/completed', page: () => const CompletedTasksPage()),
-      ],
     );
   }
-}
-
-class TaskController {
 }

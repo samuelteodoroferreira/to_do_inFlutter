@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:myapp/main.dart' as mainApp;
+import 'package:myapp/main.dart' as main_app;
 
 void main() {
   group('Testes do App', () {
     testWidgets('Deve alternar a conclusão de uma tarefa', (WidgetTester tester) async {
-      await tester.pumpWidget(const mainApp.MeuApp());
+      await tester.pumpWidget(const main_app.MeuApp());
 
       await tester.enterText(find.byType(TextField), 'Alternar Conclusão');
       await tester.tap(find.byIcon(Icons.add));
@@ -19,7 +19,7 @@ void main() {
     });
 
     testWidgets('Deve deletar uma tarefa', (WidgetTester tester) async {
-      await tester.pumpWidget(const mainApp.MeuApp());
+      await tester.pumpWidget(const main_app.MeuApp());
 
       await tester.enterText(find.byType(TextField), 'Deletar Tarefa');
       await tester.tap(find.byIcon(Icons.add));

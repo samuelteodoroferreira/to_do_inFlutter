@@ -29,8 +29,10 @@ class DialogoEntradaTarefa extends StatelessWidget {
         ),
         TextButton(
           onPressed: () {
-            aoEnviar(controller.text);
-            Navigator.of(context).pop();
+            if (controller.text.isNotEmpty) {
+              aoEnviar(controller.text);
+              Navigator.of(context).pop();
+            }
           },
           child: const Text('Adicionar'),
         ),
