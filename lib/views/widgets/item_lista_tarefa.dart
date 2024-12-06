@@ -19,7 +19,7 @@ class ItemListaTarefa extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 4.0, horizontal: 8.0),
       child: ListTile(
         title: Text(
-          tarefa.titulo, // Title is non-null
+          tarefa.titulo,
           style: TextStyle(
             decoration: tarefa.estaConcluida
                 ? TextDecoration.lineThrough

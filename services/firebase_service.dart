@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:logger/logger.dart';
 
 class FirebaseService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final Logger _logger = Logger();
 
   // Initialize Firebase
   Future<void> initialize() async {
@@ -12,7 +14,7 @@ class FirebaseService {
       await Firebase.initializeApp();
       await _auth.setPersistence(Persistence.LOCAL);
     } catch (e) {
-      print("Erro de Inicializacao do Firebase: $e");
+      _logger.e("Erro de Inicializacao do Firebase: $e");
     }
   }
 
@@ -22,7 +24,7 @@ class FirebaseService {
       UserCredential userCredential = await _auth.signInWithEmailAndPassword(email: email, password: password);
       return userCredential.user;
     } catch (e) {
-      print("Error signing in: $e");
+      _logger.e("Erro ao fazer login: $e");
       return null;
     }
   }
@@ -32,7 +34,7 @@ class FirebaseService {
       UserCredential userCredential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
       return userCredential.user;
     } catch (e) {
-      print("Error signing up: $e");
+      _logger.e("Erro ao criar conta: $e");
       return null;
     }
   }
@@ -41,7 +43,7 @@ class FirebaseService {
     try {
       await _auth.signOut();
     } catch (e) {
-      print("Error signing out: $e");
+      _logger.e("Erro ao fazer logout: $e");
     }
   }
 
@@ -50,7 +52,7 @@ class FirebaseService {
     try {
       await _firestore.collection(collection).add(data);
     } catch (e) {
-      print("Error adding item: $e");
+      _logger.e("Erro ao adicionar item: $e");
     }
   }
 
@@ -58,7 +60,7 @@ class FirebaseService {
     try {
       await _firestore.collection(collection).doc(docId).update(data);
     } catch (e) {
-      print("Error updating item: $e");
+      _logger.e("Erro ao atualizar item: $e");
     }
   }
 
@@ -66,7 +68,7 @@ class FirebaseService {
     try {
       await _firestore.collection(collection).doc(docId).delete();
     } catch (e) {
-      print("Error deleting item: $e");
+      _logger.e("Erro ao deletar item: $e");
     }
   }
 

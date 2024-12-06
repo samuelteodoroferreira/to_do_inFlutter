@@ -35,10 +35,49 @@ class MeuApp extends StatelessWidget {
           contentPadding: EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
         ),
       ),
-      home: const LoginPage(),
+      home: const InitializationPage(),
       initialBinding: BindingsBuilder(() {
         Get.put(TaskController());
       }),
+    );
+  }
+}
+
+class InitializationPage extends StatelessWidget {
+  const InitializationPage({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Inicialização'),
+        leading: Icon(Icons.today), // Icon representing "Today's To-Do Tasks"
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: const [
+            Icon(Icons.today, size: 100, color: Colors.teal), // Icon representing "Today's To-Do Tasks"
+            SizedBox(height: 20),
+            Text('Bem-vindo ao Gerenciador de Tarefas do Dia!', style: TextStyle(fontSize: 24)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class MyHomePage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Tarefas a Fazer'),
+        leading: Icon(Icons.checklist), 
+      ),
+      body: Center(
+        child: Text('Bem-vindo ao aplicativo de Tarefas a Fazer!'),
+      ),
     );
   }
 }

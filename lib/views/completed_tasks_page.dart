@@ -7,7 +7,7 @@ class CompletedTasksPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final TaskController taskController = Get.find<TaskController>(); // Ensure TaskController is registered in GetX
+    final TaskController taskController = Get.find<TaskController>(); 
 
     return Scaffold(
       appBar: AppBar(
@@ -17,11 +17,11 @@ class CompletedTasksPage extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: Obx(() {
           return ListView.builder(
-            itemCount: taskController.tasks.length, // Ensure tasks is an observable list
+            itemCount: taskController.tasks.length, 
             itemBuilder: (context, index) {
               final task = taskController.tasks[index];
               return ListTile(
-                title: Text(task.title), // Access the title property of Task
+                title: Text(task.title), 
               );
             },
           );

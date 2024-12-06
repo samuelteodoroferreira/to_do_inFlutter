@@ -9,8 +9,7 @@ class Task {
 
 class TaskController extends GetxController {
   var tasks = <Task>[].obs;
-  var completedTasks = <Task>[].obs; // Add observable list for completed tasks
-
+  var completedTasks = <Task>[].obs;
   void addTask(Task task) {
     tasks.add(task);
   }
